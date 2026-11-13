@@ -149,7 +149,9 @@ button:disabled { background: #888; }
 <button id="startBtn" disabled>
   ЗАВАНТАЖЕННЯ СКАНЕРА...
 </button>
-
+<button id="finishScan" type="button" onclick="finishScanning()">
+  ✓ ЗАВЕРШИТИ СКАНУВАННЯ
+</button>
 <button id="stopBtn" class="cancel" hidden>
   СКАСУВАТИ
 </button>
@@ -351,6 +353,29 @@ function handleScan(code) {
       type: "BARCODE_SCANNED",
       barcode: String(code)
     }, "*");
+  }
+}
+  function finishScanning() {
+  // Зупиняємо камеру
+  stopCamera();
+
+  // Блокуємо повторне сканування
+  scanHandled = true;
+
+  // Повідомляємо основний застосунок
+  if (window.opener && !window.opener.closed) {
+    window.opener.postMessage({
+      type: "SCANNING_FINISHED"
+    }, "*");
+  }
+
+  // Показуємо повідомлення
+  status.textContent = "✓ СКАНУВАННЯ ЗАВЕРШЕНО";
+
+  const finishButton = document.getElementById("finishScan");
+  if (finishButton) {
+    finishButton.disabled = true;
+    finishButton.textContent = "СКАНУВАННЯ ЗАВЕРШЕНО";
   }
 }
 
