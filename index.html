@@ -329,10 +329,13 @@ function successSignal() {
   } catch (e) {}
 }
 
+
 function handleScan(code) {
+
   if (scanHandled) return;
 
   scanHandled = true;
+
   count++;
 
   result.textContent = code;
@@ -343,7 +346,16 @@ function handleScan(code) {
 
   successSignal();
   stopCamera();
+
+  // Передаємо штрихкод головному застосунку GAS
+  if (window.parent !== window) {
+    window.parent.postMessage({
+      type: "BARCODE_SCANNED",
+      barcode: String(code)
+    }, "*");
+  }
 }
+
 
 async function startScanner() {
   if (scanning || starting || !reader) return;
