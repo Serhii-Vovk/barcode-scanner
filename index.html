@@ -4,94 +4,129 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Сканер штрихкодів</title>
+  <title>Сканування товару</title>
 
   <style>
     * { box-sizing: border-box; }
 
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
+      margin: 0 auto;
+      padding: 18px;
+      max-width: 600px;
       background: #f1f3f5;
       color: #222;
-      max-width: 600px;
-      margin-inline: auto;
     }
 
     h2 { text-align: center; }
 
     video {
+      display: block;
       width: 100%;
       min-height: 220px;
       background: #111;
-      border-radius: 12px;
+      border-radius: 14px;
       object-fit: cover;
     }
 
     button {
+      display: block;
       width: 100%;
-      padding: 16px;
-      margin-top: 12px;
-      font-size: 18px;
+      padding: 18px;
+      margin-top: 14px;
+      font-size: 19px;
+      font-weight: bold;
       border: 0;
-      border-radius: 10px;
+      border-radius: 12px;
       color: white;
       background: #1677d2;
-      cursor: pointer;
     }
 
-    button.stop { background: #b83232; }
-
-    button:disabled {
-      background: #888;
-    }
+    button.cancel { background: #b83232; }
+    button:disabled { background: #888; }
 
     .panel {
       background: white;
-      padding: 16px;
+      padding: 17px;
       margin-top: 14px;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow-wrap: anywhere;
     }
 
-    .value {
-      font-size: 22px;
+    .status {
+      font-size: 17px;
       font-weight: bold;
+    }
+
+    .success {
+      background: #d9f7df;
+      border: 2px solid #229c46;
+      color: #146b2e;
+    }
+
+    .barcode {
       display: block;
-      margin-top: 8px;
+      margin-top: 10px;
+      font-size: 27px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      overflow-wrap: anywhere;
+    }
+
+    .number {
+      font-size: 30px;
+      font-weight: bold;
+    }
+
+    .hint {
+      color: #555;
+      text-align: center;
+      line-height: 1.5;
     }
   </style>
 </head>
 
 <body>
 
-  <h2>Сканер штрихкодів</h2>
+  <h2>Приймання товару</h2>
+
+  <p class="hint">
+    Натисніть кнопку, наведіть камеру на штрихкод.
+    Після одного зчитування камера зупиниться.
+  </p>
 
   <video id="video" autoplay muted playsinline></video>
 
-  <button id="startBtn">Увімкнути камеру</button>
-  <button id="stopBtn" class="stop">Зупинити камеру</button>
+  <button id="startBtn" disabled>
+    ЗАВАНТАЖЕННЯ СКАНЕРА...
+  </button>
+
+  <button id="stopBtn" class="cancel" hidden>
+    СКАСУВАТИ
+  </button>
 
   <div class="panel">
-    Статус:
-    <span id="status">Готовий до запуску</span>
+    <div>Статус:</div>
+    <div class="status" id="status">
+      Завантаження бібліотеки...
+    </div>
+  </div>
+
+  <div class="panel" id="resultPanel">
+    <div>Останній штрихкод:</div>
+    <span class="barcode" id="result">—</span>
   </div>
 
   <div class="panel">
-    Останній штрихкод:
-    <span class="value" id="result">—</span>
-  </div>
-
-  <div class="panel">
-    Кількість сканувань:
-    <span class="value" id="count">0</span>
+    Кількість успішних сканувань:
+    <div class="number" id="count">0</div>
   </div>
 
   <script type="module">
     const video = document.getElementById("video");
     const status = document.getElementById("status");
     const result = document.getElementById("result");
+    const resultPanel = document.getElementById("resultPanel");
     const countLabel = document.getElementById("count");
     const startBtn = document.getElementById("startBtn");
     const stopBtn = document.getElementById("stopBtn");
@@ -99,86 +134,10 @@
     let reader = null;
     let controls = null;
     let count = 0;
-    let lastCode = "";
-    let lastTime = 0;
-    let starting = false;
+    let scanning = false;
+    let scanHandled = false;
 
-    let ZXingBrowser;
-
-    try {
-      status.textContent = "Завантаження бібліотеки сканера...";
-
-      ZXingBrowser = await import(
-        "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm"
-      );
-
-      reader = new ZXingBrowser.BrowserMultiFormatReader();
-
-      status.textContent = "Сканер готовий до роботи";
-    } catch (error) {
-      status.textContent =
-        "Помилка завантаження бібліотеки: " + error.message;
-    }
-
-    startBtn.addEventListener("click", async () => {
-      if (starting || controls) return;
-
-      if (!reader) {
-        status.textContent =
-          "Бібліотека сканера не завантажилася. Оновіть сторінку.";
-        return;
-      }
-
-      starting = true;
-      startBtn.disabled = true;
-      status.textContent = "Запускаємо камеру...";
-
-      try {
-        if (!navigator.mediaDevices?.getUserMedia) {
-          throw new Error(
-            "Браузер не підтримує доступ до камери або сторінка не HTTPS"
-          );
-        }
-
-        controls = await reader.decodeFromVideoDevice(
-          undefined,
-          video,
-          (scanResult, error) => {
-            if (scanResult) {
-              const code = scanResult.getText();
-              const now = Date.now();
-
-              if (
-                code === lastCode &&
-                now - lastTime < 1500
-              ) return;
-
-              lastCode = code;
-              lastTime = now;
-              count++;
-
-              result.textContent = code;
-              countLabel.textContent = count;
-              status.textContent =
-                "Штрихкод успішно розпізнано";
-            }
-          }
-        );
-
-        status.textContent =
-          "Камера працює. Наведіть її на штрихкод.";
-
-      } catch (error) {
-        controls = null;
-        status.textContent =
-          "Помилка камери: " + error.name + " — " + error.message;
-      } finally {
-        starting = false;
-        startBtn.disabled = false;
-      }
-    });
-
-    stopBtn.addEventListener("click", () => {
+    function stopCamera() {
       if (controls) {
         controls.stop();
         controls = null;
@@ -189,10 +148,112 @@
         video.srcObject = null;
       }
 
-      status.textContent = "Сканування зупинено";
+      scanning = false;
       startBtn.disabled = false;
-      starting = false;
+      startBtn.textContent = "СКАНУВАТИ ТОВАР";
+      stopBtn.hidden = true;
+    }
+
+    function successSignal() {
+      if (navigator.vibrate) {
+        navigator.vibrate(150);
+      }
+
+      try {
+        const AudioContextClass =
+          window.AudioContext || window.webkitAudioContext;
+
+        if (AudioContextClass) {
+          const audio = new AudioContextClass();
+          const oscillator = audio.createOscillator();
+          const gain = audio.createGain();
+
+          oscillator.connect(gain);
+          gain.connect(audio.destination);
+          oscillator.frequency.value = 880;
+          gain.gain.value = 0.12;
+
+          oscillator.start();
+          oscillator.stop(audio.currentTime + 0.15);
+
+          oscillator.onended = () => audio.close();
+        }
+      } catch (e) {
+        // Звуковий сигнал необов'язковий.
+      }
+    }
+
+    function handleScan(code) {
+      if (scanHandled) return;
+
+      scanHandled = true;
+      count++;
+
+      result.textContent = code;
+      countLabel.textContent = count;
+
+      resultPanel.classList.add("success");
+      status.textContent = "✓ ТОВАР УСПІШНО ВІДСКАНОВАНО";
+
+      successSignal();
+      stopCamera();
+    }
+
+    async function startScanner() {
+      if (scanning || !reader) return;
+
+      scanning = true;
+      scanHandled = false;
+
+      startBtn.disabled = true;
+      startBtn.textContent = "ШУКАЄМО ШТРИХКОД...";
+      stopBtn.hidden = false;
+
+      resultPanel.classList.remove("success");
+      status.textContent = "Наведіть камеру на штрихкод...";
+
+      try {
+        controls = await reader.decodeFromVideoDevice(
+          undefined,
+          video,
+          (scanResult, error) => {
+            if (scanResult && !scanHandled) {
+              handleScan(scanResult.getText());
+            }
+          }
+        );
+      } catch (error) {
+        stopCamera();
+
+        status.textContent =
+          "Помилка камери: " + error.name + " — " + error.message;
+      }
+    }
+
+    startBtn.addEventListener("click", startScanner);
+
+    stopBtn.addEventListener("click", () => {
+      stopCamera();
+      status.textContent = "Сканування скасовано";
     });
+
+    try {
+      status.textContent = "Завантаження бібліотеки сканера...";
+
+      const ZXingBrowser = await import(
+        "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm"
+      );
+
+      reader = new ZXingBrowser.BrowserMultiFormatReader();
+
+      status.textContent = "Готовий до сканування";
+      startBtn.disabled = false;
+      startBtn.textContent = "СКАНУВАТИ ТОВАР";
+
+    } catch (error) {
+      status.textContent =
+        "Помилка завантаження сканера: " + error.message;
+    }
   </script>
 
 </body>
