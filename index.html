@@ -71,10 +71,12 @@ button {
   border-radius: 12px;
   color: white;
   background: #1677d2;
+  cursor: pointer;
 }
 
 button.cancel { background: #b83232; }
-button:disabled { background: #888; }
+button.finish { background: #198754; }
+button:disabled { background: #888; cursor: not-allowed; }
 
 .panel {
   background: white;
@@ -109,9 +111,7 @@ button:disabled { background: #888; }
   font-weight: bold;
 }
 
-.zoom-area {
-  display: none;
-}
+.zoom-area { display: none; }
 
 .zoom-area input {
   width: 100%;
@@ -124,7 +124,6 @@ button:disabled { background: #888; }
   margin-top: 8px;
   line-height: 1.4;
 }
-
 </style>
 </head>
 
@@ -149,19 +148,19 @@ button:disabled { background: #888; }
 <button id="startBtn" disabled>
   ЗАВАНТАЖЕННЯ СКАНЕРА...
 </button>
-<button id="finishScan" type="button" onclick="finishScanning()">
+
+<button id="finishScan" class="finish" type="button" onclick="finishScanning()" disabled>
   ✓ ЗАВЕРШИТИ СКАНУВАННЯ
 </button>
+
 <button id="stopBtn" class="cancel" hidden>
-  СКАСУВАТИ
+  СКАСУВАТИ ПОТОЧНЕ СКАНУВАННЯ
 </button>
 
 <div class="panel">
   Статус:
   <div class="status" id="status">Завантаження...</div>
-  <div class="small" id="focusStatus">
-    Підготовка камери
-  </div>
+  <div class="small" id="focusStatus">Підготовка камери</div>
 </div>
 
 <div class="panel" id="resultPanel">
@@ -174,6 +173,12 @@ button:disabled { background: #888; }
   <div class="number" id="count">0</div>
 </div>
 
+<div class="panel small">
+  Після кожного зчитування камера зупиняється.
+  Натисніть «Сканувати товар», щоб перейти до наступного.
+  Коли всі товари відскановані, натисніть «Завершити сканування».
+</div>
+
 <script type="module">
 
 const video = document.getElementById("video");
@@ -183,6 +188,7 @@ const resultPanel = document.getElementById("resultPanel");
 const countLabel = document.getElementById("count");
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
+const finishButton = document.getElementById("finishScan");
 const scanFrame = document.getElementById("scanFrame");
 const scanHint = document.getElementById("scanHint");
 const focusStatus = document.getElementById("focusStatus");
@@ -197,6 +203,8 @@ let count = 0;
 let scanning = false;
 let scanHandled = false;
 let starting = false;
+let scanFinished = false;
+let finishSent = false;
 
 function stopCamera() {
   if (controls) {
@@ -217,8 +225,11 @@ function stopCamera() {
   scanHint.hidden = true;
   zoomArea.style.display = "none";
 
-  startBtn.disabled = false;
-  startBtn.textContent = "СКАНУВАТИ ТОВАР";
+  startBtn.disabled = scanFinished || !reader;
+  startBtn.textContent = scanFinished
+    ? "СКАНУВАННЯ ЗАВЕРШЕНО"
+    : "СКАНУВАТИ ТОВАР";
+
   stopBtn.hidden = true;
 }
 
@@ -234,7 +245,7 @@ async function configureCamera() {
   try {
     if (!cameraTrack.getCapabilities) {
       focusStatus.textContent =
-        "Автофокус контролюється камерою iPhone.";
+        "Автофокус контролюється камерою пристрою.";
       return;
     }
 
@@ -257,7 +268,7 @@ async function configureCamera() {
       }
     } else {
       focusStatus.textContent =
-        "Фокусування контролюється камерою iPhone.";
+        "Фокусування контролюється камерою пристрою.";
     }
 
     if (
@@ -331,9 +342,19 @@ function successSignal() {
   } catch (e) {}
 }
 
+function sendToMainWindow(message) {
+  if (!window.opener || window.opener.closed) {
+    status.textContent =
+      "Головне вікно недоступне. Відкрийте сканер із застосунку GAS.";
+    return false;
+  }
+
+  window.opener.postMessage(message, "*");
+  return true;
+}
 
 function handleScan(code) {
-  if (scanHandled) return;
+  if (scanHandled || scanFinished) return;
 
   scanHandled = true;
   count++;
@@ -342,47 +363,61 @@ function handleScan(code) {
   countLabel.textContent = count;
 
   resultPanel.classList.add("success");
-  status.textContent = "✓ ТОВАР УСПІШНО ВІДСКАНОВАНО";
+  status.textContent = "✓ ТОВАР ВІДСКАНОВАНО";
 
   successSignal();
   stopCamera();
 
-  // Передаємо штрихкод у головне вікно Google Apps Script
-  if (window.opener && !window.opener.closed) {
-    window.opener.postMessage({
-      type: "BARCODE_SCANNED",
-      barcode: String(code)
-    }, "*");
+  const sent = sendToMainWindow({
+    type: "BARCODE_SCANNED",
+    barcode: String(code)
+  });
+
+  if (sent) {
+    focusStatus.textContent =
+      "Штрихкод передано в накладну. Можна сканувати наступний товар.";
   }
 }
-  function finishScanning() {
-  // Зупиняємо камеру
-  stopCamera();
 
-  // Блокуємо повторне сканування
+function finishScanning() {
+  if (scanFinished || finishSent) return;
+
+  scanFinished = true;
   scanHandled = true;
 
-  // Повідомляємо основний застосунок
-  if (window.opener && !window.opener.closed) {
-    window.opener.postMessage({
-      type: "SCANNING_FINISHED"
-    }, "*");
+  stopCamera();
+
+  startBtn.disabled = true;
+  finishButton.disabled = true;
+  finishButton.textContent = "СКАНУВАННЯ ЗАВЕРШЕНО";
+
+  status.textContent = "Завершення сканування...";
+
+  const sent = sendToMainWindow({
+    type: "SCANNING_FINISHED",
+    totalScans: count
+  });
+
+  if (!sent) {
+    scanFinished = false;
+    finishButton.disabled = false;
+    finishButton.textContent = "✓ ЗАВЕРШИТИ СКАНУВАННЯ";
+    status.textContent = "Не вдалося зв'язатися з головним вікном.";
+    return;
   }
 
-  // Показуємо повідомлення
-  status.textContent = "✓ СКАНУВАННЯ ЗАВЕРШЕНО";
+  finishSent = true;
 
-  const finishButton = document.getElementById("finishScan");
-  if (finishButton) {
-    finishButton.disabled = true;
-    finishButton.textContent = "СКАНУВАННЯ ЗАВЕРШЕНО";
-  }
+  status.textContent =
+    "✓ СКАНУВАННЯ ЗАВЕРШЕНО";
+
+  focusStatus.textContent =
+    "Усього відскановано товарів: " + count +
+    ". Результати передано в основний застосунок.";
 }
 
-
-
 async function startScanner() {
-  if (scanning || starting || !reader) return;
+  if (scanning || starting || !reader || scanFinished) return;
 
   scanning = true;
   starting = true;
@@ -404,7 +439,7 @@ async function startScanner() {
       undefined,
       video,
       (scanResult, error) => {
-        if (scanResult && !scanHandled) {
+        if (scanResult && !scanHandled && !scanFinished) {
           handleScan(scanResult.getText());
         }
       }
@@ -415,7 +450,8 @@ async function startScanner() {
     await configureCamera();
 
     if (scanning) {
-      status.textContent = "Камера працює. Наведіть штрихкод у рамку.";
+      status.textContent =
+        "Камера працює. Наведіть штрихкод у рамку.";
     }
 
   } catch (error) {
@@ -430,7 +466,8 @@ startBtn.addEventListener("click", startScanner);
 
 stopBtn.addEventListener("click", () => {
   stopCamera();
-  status.textContent = "Сканування скасовано";
+  scanHandled = true;
+  status.textContent = "Сканування скасовано.";
 });
 
 try {
@@ -445,11 +482,14 @@ try {
   status.textContent = "Готовий до сканування";
   startBtn.disabled = false;
   startBtn.textContent = "СКАНУВАТИ ТОВАР";
+  finishButton.disabled = false;
 
 } catch (error) {
   status.textContent =
     "Помилка завантаження сканера: " + error.message;
 }
+
+window.addEventListener("beforeunload", stopCamera);
 
 </script>
 
