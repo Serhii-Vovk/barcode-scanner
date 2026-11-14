@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -8,135 +7,33 @@
 
 <style>
 * { box-sizing: border-box; }
-
-body {
-  font-family: Arial, sans-serif;
-  margin: 0 auto;
-  padding: 16px;
-  max-width: 600px;
-  background: #f1f3f5;
-  color: #222;
-}
-
+body { font-family: Arial, sans-serif; margin: 0 auto; padding: 16px; max-width: 600px; background: #f1f3f5; color: #222; }
 h2 { text-align: center; }
-
-.camera {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  border-radius: 14px;
-  background: #111;
-}
-
-video {
-  display: block;
-  width: 100%;
-  min-height: 230px;
-  object-fit: cover;
-}
-
-.scan-frame {
-  position: absolute;
-  width: 82%;
-  height: 90px;
-  top: 50%;
-  left: 9%;
-  transform: translateY(-50%);
-  border: 3px solid #27e66b;
-  border-radius: 12px;
-  box-shadow: 0 0 0 999px rgba(0,0,0,.18);
-  pointer-events: none;
-}
-
-.scan-hint {
-  position: absolute;
-  bottom: 12px;
-  left: 0;
-  width: 100%;
-  text-align: center;
-  color: white;
-  font-size: 14px;
-  text-shadow: 0 1px 4px black;
-  pointer-events: none;
-}
-
-button {
-  display: block;
-  width: 100%;
-  padding: 18px;
-  margin-top: 14px;
-  font-size: 18px;
-  font-weight: bold;
-  border: 0;
-  border-radius: 12px;
-  color: white;
-  background: #1677d2;
-  cursor: pointer;
-}
-
+.camera { position: relative; width: 100%; overflow: hidden; border-radius: 14px; background: #111; }
+video { display: block; width: 100%; min-height: 230px; object-fit: cover; }
+.scan-frame { position: absolute; width: 82%; height: 90px; top: 50%; left: 9%; transform: translateY(-50%); border: 3px solid #27e66b; border-radius: 12px; box-shadow: 0 0 0 999px rgba(0,0,0,.18); pointer-events: none; }
+.scan-hint { position: absolute; bottom: 12px; left: 0; width: 100%; text-align: center; color: white; font-size: 14px; text-shadow: 0 1px 4px black; pointer-events: none; }
+button { display: block; width: 100%; padding: 18px; margin-top: 14px; font-size: 18px; font-weight: bold; border: 0; border-radius: 12px; color: white; background: #1677d2; cursor: pointer; }
 button.cancel { background: #b83232; }
 button.finish { background: #198754; }
 button:disabled { background: #888; cursor: not-allowed; }
-
-.panel {
-  background: white;
-  padding: 16px;
-  margin-top: 14px;
-  border-radius: 12px;
-  overflow-wrap: anywhere;
-}
-
-.status {
-  font-size: 17px;
-  font-weight: bold;
-  margin-top: 7px;
-}
-
-.success {
-  background: #d9f7df;
-  border: 2px solid #229c46;
-  color: #146b2e;
-}
-
-.barcode {
-  display: block;
-  margin-top: 10px;
-  font-size: 27px;
-  font-weight: bold;
-  overflow-wrap: anywhere;
-}
-
-.number {
-  font-size: 30px;
-  font-weight: bold;
-}
-
+.panel { background: white; padding: 16px; margin-top: 14px; border-radius: 12px; overflow-wrap: anywhere; }
+.status { font-size: 17px; font-weight: bold; margin-top: 7px; }
+.success { background: #d9f7df; border: 2px solid #229c46; color: #146b2e; }
+.barcode { display: block; margin-top: 10px; font-size: 27px; font-weight: bold; overflow-wrap: anywhere; }
+.number { font-size: 30px; font-weight: bold; }
 .zoom-area { display: none; }
-
-.zoom-area input {
-  width: 100%;
-  margin-top: 12px;
-}
-
-.small {
-  color: #666;
-  font-size: 13px;
-  margin-top: 8px;
-  line-height: 1.4;
-}
+.zoom-area input { width: 100%; margin-top: 12px; }
+.small { color: #666; font-size: 13px; margin-top: 8px; line-height: 1.4; }
 </style>
 </head>
-
 <body>
-
 <h2>Приймання товару</h2>
 
 <div class="camera">
   <video id="video" autoplay muted playsinline></video>
   <div class="scan-frame" id="scanFrame" hidden></div>
-  <div class="scan-hint" id="scanHint" hidden>
-    Розмістіть штрихкод у рамці
-  </div>
+  <div class="scan-hint" id="scanHint" hidden>Розмістіть штрихкод у рамці</div>
 </div>
 
 <div class="panel zoom-area" id="zoomArea">
@@ -145,21 +42,13 @@ button:disabled { background: #888; cursor: not-allowed; }
   <div id="zoomValue">1.0×</div>
 </div>
 
-<button id="startBtn" disabled>
-  ЗАВАНТАЖЕННЯ СКАНЕРА...
-</button>
-
-<button id="finishScan" class="finish" type="button" disabled>
-  ✓ ЗАВЕРШИТИ СКАНУВАННЯ
-</button>
-
-<button id="stopBtn" class="cancel" hidden>
-  СКАСУВАТИ ПОТОЧНЕ СКАНУВАННЯ
-</button>
+<button id="startBtn" disabled>ПЕРЕВІРКА ПІДКЛЮЧЕННЯ...</button>
+<button id="finishScan" class="finish" type="button" disabled>✓ ЗАВЕРШИТИ СКАНУВАННЯ</button>
+<button id="stopBtn" class="cancel" hidden>СКАСУВАТИ ПОТОЧНЕ СКАНУВАННЯ</button>
 
 <div class="panel">
   Статус:
-  <div class="status" id="status">Завантаження...</div>
+  <div class="status" id="status">Перевірка параметрів сесії...</div>
   <div class="small" id="focusStatus">Підготовка камери</div>
 </div>
 
@@ -174,13 +63,11 @@ button:disabled { background: #888; cursor: not-allowed; }
 </div>
 
 <div class="panel small">
-  Після кожного зчитування камера зупиняється.
-  Натисніть «Сканувати товар», щоб перейти до наступного.
+  Після кожного зчитування камера зупиняється. Натисніть «Сканувати товар», щоб перейти до наступного.
   Коли всі товари відскановані, натисніть «Завершити сканування».
 </div>
 
 <script type="module">
-
 const video = document.getElementById("video");
 const status = document.getElementById("status");
 const result = document.getElementById("result");
@@ -196,6 +83,14 @@ const zoomArea = document.getElementById("zoomArea");
 const zoomSlider = document.getElementById("zoomSlider");
 const zoomValue = document.getElementById("zoomValue");
 
+// Ці параметри додає основний застосунок GAS під час відкриття сканера.
+const params = new URLSearchParams(window.location.search);
+const GAS_URL = params.get("gas");
+const SESSION_ID = params.get("session");
+const connectionReady = Boolean(
+  GAS_URL && SESSION_ID && /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:\?.*)?$/.test(GAS_URL)
+);
+
 let reader = null;
 let controls = null;
 let cameraTrack = null;
@@ -205,136 +100,91 @@ let scanHandled = false;
 let starting = false;
 let scanFinished = false;
 let finishSent = false;
+let sending = false;
 
 function stopCamera() {
   if (controls) {
     controls.stop();
     controls = null;
   }
-
   if (video.srcObject) {
     video.srcObject.getTracks().forEach(track => track.stop());
     video.srcObject = null;
   }
-
   cameraTrack = null;
   scanning = false;
   starting = false;
-
   scanFrame.hidden = true;
   scanHint.hidden = true;
   zoomArea.style.display = "none";
-
-  startBtn.disabled = scanFinished || !reader;
-  startBtn.textContent = scanFinished
-    ? "СКАНУВАННЯ ЗАВЕРШЕНО"
-    : "СКАНУВАТИ ТОВАР";
-
+  startBtn.disabled = scanFinished || !reader || !connectionReady;
+  startBtn.textContent = scanFinished ? "СКАНУВАННЯ ЗАВЕРШЕНО" : "СКАНУВАТИ ТОВАР";
   stopBtn.hidden = true;
 }
 
 async function configureCamera() {
   cameraTrack = video.srcObject?.getVideoTracks?.()[0];
-
   if (!cameraTrack) {
-    focusStatus.textContent =
-      "Камера працює. Фокусування контролюється пристроєм.";
+    focusStatus.textContent = "Камера працює. Фокусування контролюється пристроєм.";
     return;
   }
-
   try {
     if (!cameraTrack.getCapabilities) {
-      focusStatus.textContent =
-        "Автофокус контролюється камерою пристрою.";
+      focusStatus.textContent = "Автофокус контролюється камерою пристрою.";
       return;
     }
-
     const capabilities = cameraTrack.getCapabilities();
-
-    if (
-      capabilities.focusMode &&
-      capabilities.focusMode.includes("continuous")
-    ) {
+    if (capabilities.focusMode && capabilities.focusMode.includes("continuous")) {
       try {
-        await cameraTrack.applyConstraints({
-          advanced: [{ focusMode: "continuous" }]
-        });
-
-        focusStatus.textContent =
-          "Автоматичне фокусування увімкнено.";
+        await cameraTrack.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
+        focusStatus.textContent = "Автоматичне фокусування увімкнено.";
       } catch (e) {
-        focusStatus.textContent =
-          "Фокусування контролюється камерою автоматично.";
+        focusStatus.textContent = "Фокусування контролюється камерою автоматично.";
       }
     } else {
-      focusStatus.textContent =
-        "Фокусування контролюється камерою пристрою.";
+      focusStatus.textContent = "Фокусування контролюється камерою пристрою.";
     }
-
-    if (
-      capabilities.zoom &&
-      typeof capabilities.zoom.min === "number" &&
-      typeof capabilities.zoom.max === "number" &&
-      capabilities.zoom.max > capabilities.zoom.min
-    ) {
+    if (capabilities.zoom && typeof capabilities.zoom.min === "number" && typeof capabilities.zoom.max === "number" && capabilities.zoom.max > capabilities.zoom.min) {
       const min = capabilities.zoom.min;
       const max = capabilities.zoom.max;
       const step = capabilities.zoom.step || 0.1;
-
       zoomSlider.min = min;
       zoomSlider.max = max;
       zoomSlider.step = step;
       zoomSlider.value = Math.max(min, Math.min(max, 1));
-
-      zoomValue.textContent =
-        Number(zoomSlider.value).toFixed(1) + "×";
-
+      zoomValue.textContent = Number(zoomSlider.value).toFixed(1) + "×";
       zoomArea.style.display = "block";
     } else {
       zoomArea.style.display = "none";
     }
-
   } catch (error) {
-    focusStatus.textContent =
-      "Стандартне налаштування камери.";
+    focusStatus.textContent = "Стандартне налаштування камери.";
   }
 }
 
 zoomSlider.addEventListener("input", async () => {
   if (!cameraTrack) return;
-
   const value = Number(zoomSlider.value);
   zoomValue.textContent = value.toFixed(1) + "×";
-
   try {
-    await cameraTrack.applyConstraints({
-      advanced: [{ zoom: value }]
-    });
+    await cameraTrack.applyConstraints({ advanced: [{ zoom: value }] });
   } catch (error) {
-    focusStatus.textContent =
-      "Ця камера не підтримує програмне наближення.";
+    focusStatus.textContent = "Ця камера не підтримує програмне наближення.";
   }
 });
 
 function successSignal() {
-  if (navigator.vibrate) {
-    navigator.vibrate(150);
-  }
-
+  if (navigator.vibrate) navigator.vibrate(150);
   try {
-    const AudioContextClass =
-      window.AudioContext || window.webkitAudioContext;
-
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (AudioContextClass) {
       const audio = new AudioContextClass();
       const oscillator = audio.createOscillator();
       const gain = audio.createGain();
-
       oscillator.connect(gain);
       gain.connect(audio.destination);
       oscillator.frequency.value = 880;
       gain.gain.value = 0.12;
-
       oscillator.start();
       oscillator.stop(audio.currentTime + 0.15);
       oscillator.onended = () => audio.close();
@@ -342,177 +192,129 @@ function successSignal() {
   } catch (e) {}
 }
 
-function sendToMainWindow(message) {
-  // Перевіряємо, чи існує головне вікно
-  if (!window.opener) {
-    status.textContent =
-      "ПОМИЛКА: window.opener відсутній. Зв'язок із GAS не створено.";
-    return false;
-  }
-
-  // Перевіряємо, чи не закрите головне вікно
-  if (window.opener.closed) {
-    status.textContent =
-      "ПОМИЛКА: головне вікно GAS закрите.";
-    return false;
-  }
-
-  try {
-    window.opener.postMessage(message, "*");
-
-    status.textContent =
-      "Повідомлення відправлено в Google Apps Script.";
-
-    return true;
-
-  } catch (error) {
-    status.textContent =
-      "ПОМИЛКА ПЕРЕДАЧІ: " + error.message;
-
-    return false;
-  }
+// no-cors не дозволяє прочитати відповідь GAS у браузері.
+// Фактичне підтвердження приймання показує основний застосунок через ScanQueue.
+async function sendToGas(payload) {
+  if (!connectionReady) throw new Error("Відсутні або некоректні параметри GAS/session у посиланні.");
+  await fetch(GAS_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=UTF-8" },
+    body: JSON.stringify({ sessionId: SESSION_ID, ...payload })
+  });
 }
 
-function handleScan(code) {
-  if (scanHandled || scanFinished) return;
-
+async function handleScan(code) {
+  if (scanHandled || scanFinished || sending) return;
   scanHandled = true;
+  sending = true;
+  finishButton.disabled = true;
   count++;
-
   result.textContent = code;
   countLabel.textContent = count;
-
   resultPanel.classList.add("success");
-  status.textContent = "✓ ТОВАР ВІДСКАНОВАНО";
-
+  status.textContent = "Штрихкод зчитано. Передаємо в основний застосунок...";
   successSignal();
   stopCamera();
-
-  const sent = sendToMainWindow({
-    type: "BARCODE_SCANNED",
-    barcode: String(code)
-  });
-
-  if (sent) {
-    focusStatus.textContent =
-      "Штрихкод передано в накладну. Можна сканувати наступний товар.";
+  finishButton.disabled = true;
+  try {
+    await sendToGas({ action: "barcode", barcode: String(code) });
+    status.textContent = "✓ ШТРИХКОД НАДІСЛАНО В GAS";
+    focusStatus.textContent = "Основний застосунок обробить штрихкод. Можна сканувати наступний товар.";
+  } catch (error) {
+    count--;
+    countLabel.textContent = count;
+    resultPanel.classList.remove("success");
+    status.textContent = "ПОМИЛКА ПЕРЕДАЧІ: " + error.message;
+    focusStatus.textContent = "Перевірте підключення та спробуйте ще раз.";
+    scanHandled = false;
+  } finally {
+    sending = false;
+    finishButton.disabled = scanFinished || !connectionReady;
   }
 }
 
-function finishScanning() {
-  if (scanFinished || finishSent) return;
-
+async function finishScanning() {
+  if (scanFinished || finishSent || sending) return;
   scanFinished = true;
   scanHandled = true;
-
   stopCamera();
-
   startBtn.disabled = true;
   finishButton.disabled = true;
-  finishButton.textContent = "СКАНУВАННЯ ЗАВЕРШЕНО";
-
-  status.textContent = "Завершення сканування...";
-
-  const sent = sendToMainWindow({
-    type: "SCANNING_FINISHED",
-    totalScans: count
-  });
-
-  if (!sent) {
+  finishButton.textContent = "НАДСИЛАННЯ...";
+  status.textContent = "Надсилаємо команду завершення в GAS...";
+  try {
+    await sendToGas({ action: "finish" });
+    finishSent = true;
+    finishButton.textContent = "СКАНУВАННЯ ЗАВЕРШЕНО";
+    status.textContent = "✓ КОМАНДУ ЗАВЕРШЕННЯ НАДІСЛАНО";
+    focusStatus.textContent = "Усього зчитано штрихкодів: " + count + ". Дочекайтеся підтвердження в основному застосунку.";
+  } catch (error) {
     scanFinished = false;
     finishButton.disabled = false;
     finishButton.textContent = "✓ ЗАВЕРШИТИ СКАНУВАННЯ";
-    status.textContent = "Не вдалося зв'язатися з головним вікном.";
-    return;
+    status.textContent = "Не вдалося надіслати завершення: " + error.message;
   }
-
-  finishSent = true;
-
-  status.textContent =
-    "✓ СКАНУВАННЯ ЗАВЕРШЕНО";
-
-  focusStatus.textContent =
-    "Усього відскановано товарів: " + count +
-    ". Результати передано в основний застосунок.";
 }
 
 async function startScanner() {
-  if (scanning || starting || !reader || scanFinished) return;
-
+  if (scanning || starting || !reader || scanFinished || !connectionReady) return;
   scanning = true;
   starting = true;
   scanHandled = false;
-
   startBtn.disabled = true;
   startBtn.textContent = "ШУКАЄМО ШТРИХКОД...";
   stopBtn.hidden = false;
-
   resultPanel.classList.remove("success");
   status.textContent = "Наведіть штрихкод у рамку...";
   focusStatus.textContent = "Налаштування камери...";
-
   scanFrame.hidden = false;
   scanHint.hidden = false;
-
   try {
-    controls = await reader.decodeFromVideoDevice(
-      undefined,
-      video,
-      (scanResult, error) => {
-        if (scanResult && !scanHandled && !scanFinished) {
-          handleScan(scanResult.getText());
-        }
-      }
-    );
-
+    controls = await reader.decodeFromVideoDevice(undefined, video, (scanResult, error) => {
+      if (scanResult && !scanHandled && !scanFinished) handleScan(scanResult.getText());
+    });
     starting = false;
-
     await configureCamera();
-
-    if (scanning) {
-      status.textContent =
-        "Камера працює. Наведіть штрихкод у рамку.";
-    }
-
+    if (scanning) status.textContent = "Камера працює. Наведіть штрихкод у рамку.";
   } catch (error) {
     stopCamera();
-
-    status.textContent =
-      "Помилка камери: " + error.name + " — " + error.message;
+    status.textContent = "Помилка камери: " + error.name + " — " + error.message;
   }
 }
 
 startBtn.addEventListener("click", startScanner);
-  finishButton.addEventListener("click", finishScanning);
-
+finishButton.addEventListener("click", finishScanning);
 stopBtn.addEventListener("click", () => {
   stopCamera();
   scanHandled = true;
-  status.textContent = "Сканування скасовано.";
+  status.textContent = "Сканування скасовано. Можна продовжити кнопкою сканування.";
 });
 
+if (!connectionReady) {
+  status.textContent = "ПОМИЛКА: немає параметрів gas/session. Відкрийте сканер кнопкою з основного застосунку.";
+  focusStatus.textContent = "Не відкривайте GitHub-сторінку напряму — потрібна активна сесія приймання.";
+  startBtn.disabled = true;
+  finishButton.disabled = true;
+} else {
+  status.textContent = "Параметри сесії отримано. Завантаження бібліотеки сканера...";
+  finishButton.disabled = false;
+}
+
 try {
-  status.textContent = "Завантаження бібліотеки сканера...";
-
-  const ZXingBrowser = await import(
-    "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm"
-  );
-
+  if (!connectionReady) throw new Error("Немає активної GAS-сесії.");
+  const ZXingBrowser = await import("https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm");
   reader = new ZXingBrowser.BrowserMultiFormatReader();
-
   status.textContent = "Готовий до сканування";
   startBtn.disabled = false;
   startBtn.textContent = "СКАНУВАТИ ТОВАР";
-  finishButton.disabled = false;
-
 } catch (error) {
-  status.textContent =
-    "Помилка завантаження сканера: " + error.message;
+  status.textContent = "Помилка підготовки сканера: " + error.message;
+  startBtn.disabled = true;
+  finishButton.disabled = true;
 }
 
 window.addEventListener("beforeunload", stopCamera);
-
 </script>
-
 </body>
 </html>
