@@ -343,14 +343,34 @@ function successSignal() {
 }
 
 function sendToMainWindow(message) {
-  if (!window.opener || window.opener.closed) {
+  // Перевіряємо, чи існує головне вікно
+  if (!window.opener) {
     status.textContent =
-      "Головне вікно недоступне. Відкрийте сканер із застосунку GAS.";
+      "ПОМИЛКА: window.opener відсутній. Зв'язок із GAS не створено.";
     return false;
   }
 
-  window.opener.postMessage(message, "*");
-  return true;
+  // Перевіряємо, чи не закрите головне вікно
+  if (window.opener.closed) {
+    status.textContent =
+      "ПОМИЛКА: головне вікно GAS закрите.";
+    return false;
+  }
+
+  try {
+    window.opener.postMessage(message, "*");
+
+    status.textContent =
+      "Повідомлення відправлено в Google Apps Script.";
+
+    return true;
+
+  } catch (error) {
+    status.textContent =
+      "ПОМИЛКА ПЕРЕДАЧІ: " + error.message;
+
+    return false;
+  }
 }
 
 function handleScan(code) {
